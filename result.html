@@ -82,11 +82,6 @@
       <div class="val" id="m-hum">--<span class="unit">%</span></div>
       <span class="badge-ok" id="b-hum">取得中</span>
     </div>
-    <div class="metric">
-      <div class="lbl">設定温度</div>
-      <div class="val" id="m-set">--<span class="unit">°C</span></div>
-      <span class="badge-ok" id="b-set">取得中</span>
-    </div>
   </div>
 
   <!-- 快適域 -->
@@ -209,13 +204,10 @@ fetch('./data.json')
 
     const tempOk = d.temperature     >= 24 && d.temperature     <= 27;
     const humOk  = d.humidity        >= 45 && d.humidity        <= 60;
-    const setOk  = d.set_temperature >= 24 && d.set_temperature <= 28;
     const b = (ok, okTxt, ngTxt) =>
       `<span class="${ok ? 'badge-ok' : 'badge-warn'}">${ok ? okTxt : ngTxt}</span>`;
     document.getElementById('b-temp').outerHTML = b(tempOk, '快適域内', '範囲外');
     document.getElementById('b-hum').outerHTML  = b(humOk,  '快適域内', '範囲外');
-    document.getElementById('b-set').outerHTML  = b(setOk,  '快適域内', '範囲外');
-
     const dt = new Date(d.updated_at);
     document.getElementById('updated-at').innerHTML =
       `${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')} 時点のデータ`;
