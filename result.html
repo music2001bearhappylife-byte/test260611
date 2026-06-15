@@ -21,14 +21,8 @@
     margin: 0 auto 16px;
     box-shadow: 0 2px 24px rgba(0,0,0,0.07);
   }
-
   h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
   .updated { font-size: 12px; color: #bbb; margin-bottom: 20px; }
-  .demo-tag {
-    background: #fff8e6; color: #b07000; font-size: 11px;
-    border-radius: 6px; padding: 2px 7px; margin-left: 6px;
-  }
-
   .section-label { font-size:13px; font-weight:600; color:#888; margin-bottom:10px; }
   .dist-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
   .dist-icon { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
@@ -37,7 +31,7 @@
   .bar-fill { height:100%; border-radius:4px; transition: width 0.6s ease; }
   .dist-pct { font-size:13px; font-weight:600; width:34px; text-align:right; color:#333; flex-shrink:0; }
   .loading-msg { font-size:13px; color:#aaa; margin-bottom:16px; }
-  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
   .metric { background: #f5f4f0; border-radius: 12px; padding: 12px 8px; text-align: center; }
   .metric .val { font-size: 22px; font-weight: 700; color: #1a1a1a; }
   .metric .unit { font-size: 12px; color: #aaa; }
@@ -54,7 +48,6 @@
   .chart-wrap { position:relative; width:100%; height:200px; margin-bottom:8px; }
   .legend { display:flex; gap:16px; font-size:12px; color:#888; margin-bottom:20px; }
   .legend-dot { width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:4px; }
-
   .error-msg { font-size:12px; color:#e65100; margin-bottom:8px; }
 </style>
 </head>
@@ -64,13 +57,11 @@
   <h1>現在の室内環境</h1>
   <p class="updated" id="updated-at">取得中…</p>
 
-  <!-- みんなの感じ方（Googleフォーム集計） -->
   <div class="section-label">みんなの感じ方（<span id="total-count">取得中</span>件中）</div>
   <div id="dist-bars" style="margin-bottom:20px;">
     <div class="loading-msg">回答データを読み込み中…</div>
   </div>
 
-  <!-- 温湿度メトリクス -->
   <div class="metrics">
     <div class="metric">
       <div class="lbl">室温</div>
@@ -84,13 +75,11 @@
     </div>
   </div>
 
-  <!-- 快適域 -->
   <div class="comfort-row">
-    <span> 快適域：<strong>24〜27°C</strong></span>
-    <span> 快適域：<strong>45〜60%</strong></span>
+    <span>🌡 快適域：<strong>24〜27°C</strong></span>
+    <span>💧 快適域：<strong>45〜60%</strong></span>
   </div>
 
-  <!-- 省エネ情報 -->
   <div class="energy-box">
     <div class="energy-title">💡 空調の省エネ豆知識</div>
     冷房の設定温度を <strong>1°C 上げる</strong>と、空調の消費電力を約 <strong>10%</strong> 削減できます。<br>
@@ -98,34 +87,18 @@
     <span style="font-size:11px; color:#4a7a4a;">※ 省エネルギーセンター基準。500W×8h×30日×31円/kWh×10%で算出。</span>
   </div>
 
-  <!-- グラフ凡例 -->
   <div class="legend">
     <span><span class="legend-dot" style="background:#D85A30"></span>室温 (°C・左軸)</span>
     <span><span class="legend-dot" style="background:#378ADD;"></span>湿度 (%・右軸)</span>
   </div>
 
-  <!-- 推移グラフ -->
   <div class="chart-wrap">
     <canvas id="chart" role="img" aria-label="本日の室温と湿度の時間推移"></canvas>
   </div>
 </div>
 
 <script>
-// =============================================
-// 設定値
-// =============================================
-
-// GoogleフォームのApps Script公開URL
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbw9H-sVv1-6JcvVzDSsflcBc3SJQVsXmOk5SBNiesBN7GA1BXO-qgf2ZFfqpM0pnsEmcA/exec';
- 
-// Googleフォームの選択肢ラベル → 数値への変換マップ
-const LABEL_TO_V = {
-  'とても暑い': 5,
-  'やや暑い':   4,
-  'ちょうどよい': 3,
-  'やや寒い':   2,
-  'とても寒い': 1,
-};
 
 const OPTS = [
   { v:5, icon:'🥵', label:'とても暑い', formLabel:'とても暑い（汗ばむほど暑い）' },
@@ -136,14 +109,10 @@ const OPTS = [
 ];
 const BAR_COLORS = { 5:'#D85A30', 4:'#EF9F27', 3:'#639922', 2:'#378ADD', 1:'#534AB7' };
 
-// =============================================
-// Googleフォーム集計をGASから取得して表示
-// =============================================
 function renderDist(counts, total) {
   document.getElementById('total-count').textContent = total;
   const container = document.getElementById('dist-bars');
   container.innerHTML = OPTS.map(o => {
-    // GASから返ってくるのは文字列ラベルをキーにした件数
     const cnt = counts[o.formLabel] || 0;
     const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
     return `<div class="dist-row">
@@ -157,12 +126,10 @@ function renderDist(counts, total) {
   }).join('');
 }
 
-// GASへのfetch（JSONPで呼ぶ：CORSを回避するため）
 function fetchGASData() {
   const callbackName = 'gasCallback_' + Date.now();
   const script = document.createElement('script');
   script.src = GAS_URL + '?callback=' + callbackName;
-
   window[callbackName] = function(data) {
     document.getElementById('dist-bars').innerHTML = '';
     if (data && data.counts) {
@@ -174,24 +141,26 @@ function fetchGASData() {
     delete window[callbackName];
     script.remove();
   };
-
   script.onerror = function() {
     document.getElementById('dist-bars').innerHTML =
       '<div class="error-msg">通信エラー。しばらくしてから再読み込みしてください。</div>';
     delete window[callbackName];
     script.remove();
   };
-
   document.head.appendChild(script);
 }
 
 fetchGASData();
-// 2分ごとに自動更新
 setInterval(fetchGASData, 2 * 60 * 1000);
 
 // =============================================
-// おんどとりデータ（data.json）を読み込んで表示
+// グラフの軸ラベルを7:00〜21:00で固定
 // =============================================
+const FIXED_LABELS = [
+  '07:00','08:00','09:00','10:00','11:00','12:00','13:00',
+  '14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'
+];
+
 fetch('./data.json')
   .then(r => r.json())
   .then(d => {
@@ -199,34 +168,41 @@ fetch('./data.json')
       d.temperature + '<span style="font-size:12px;color:#aaa">°C</span>';
     document.getElementById('m-hum').innerHTML  =
       d.humidity    + '<span style="font-size:12px;color:#aaa">%</span>';
-    document.getElementById('m-set').innerHTML  =
-      d.set_temperature + '<span style="font-size:12px;color:#aaa">°C</span>';
 
-    const tempOk = d.temperature     >= 24 && d.temperature     <= 27;
-    const humOk  = d.humidity        >= 45 && d.humidity        <= 60;
+    const tempOk = d.temperature >= 24 && d.temperature <= 27;
+    const humOk  = d.humidity    >= 45 && d.humidity    <= 60;
     const b = (ok, okTxt, ngTxt) =>
       `<span class="${ok ? 'badge-ok' : 'badge-warn'}">${ok ? okTxt : ngTxt}</span>`;
     document.getElementById('b-temp').outerHTML = b(tempOk, '快適域内', '範囲外');
     document.getElementById('b-hum').outerHTML  = b(humOk,  '快適域内', '範囲外');
+
     const dt = new Date(d.updated_at);
     document.getElementById('updated-at').innerHTML =
       `${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')} 時点のデータ`;
 
-    // グラフ描画
+    // historyを7:00〜21:00のラベルにマッピング
+    const historyMap = {};
+    (d.history || []).forEach(h => { historyMap[h.time] = h; });
+
+    const temps = FIXED_LABELS.map(l => historyMap[l] ? historyMap[l].temp : null);
+    const hums  = FIXED_LABELS.map(l => historyMap[l] ? historyMap[l].hum  : null);
+
     new Chart(document.getElementById('chart'), {
       type: 'line',
       data: {
-        labels: d.history.map(h => h.time),
+        labels: FIXED_LABELS,
         datasets: [
           {
-            label:'室温', data: d.history.map(h => h.temp),
+            label:'室温', data: temps,
             borderColor:'#D85A30', backgroundColor:'rgba(216,90,48,0.08)',
-            fill:true, tension:0.4, pointRadius:3, yAxisID:'y'
+            fill:true, tension:0.4, pointRadius:3, yAxisID:'y',
+            spanGaps: false
           },
           {
-            label:'湿度', data: d.history.map(h => h.hum),
+            label:'湿度', data: hums,
             borderColor:'#378ADD', backgroundColor:'rgba(55,138,221,0.08)',
-            fill:true, tension:0.4, pointRadius:3, borderDash:[5,3], yAxisID:'y2'
+            fill:true, tension:0.4, pointRadius:3, borderDash:[5,3], yAxisID:'y2',
+            spanGaps: false
           }
         ]
       },
@@ -240,7 +216,7 @@ fetch('./data.json')
           y2: { position:'right', min:35, max:75,
                 title:{display:true, text:'湿度(%)', font:{size:11}},
                 grid:{display:false}, ticks:{font:{size:11}} },
-          x:  { ticks:{font:{size:11}, autoSkip:false, maxRotation:0} }
+          x:  { ticks:{font:{size:11}, autoSkip:true, maxRotation:0, maxTicksLimit:8} }
         }
       }
     });
@@ -248,8 +224,6 @@ fetch('./data.json')
   .catch(() => {
     document.getElementById('updated-at').textContent = 'センサーデータ読み込みエラー';
   });
-
-
 </script>
 </body>
 </html>
